@@ -195,12 +195,16 @@ function ArticleCard({ article, siteLang, aspectRatio, isHero = false, onSelect 
       : 'text-base sm:text-lg lg:text-xl line-clamp-3';
 
   return (
-    <article
-      onClick={() => {
-        onSelect(article.id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    <a
+      href={`/article/${encodeURIComponent(article.id)}`}
+      onClick={(e) => {
+        if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+          e.preventDefault();
+          onSelect(article.id);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }}
-      className={`group relative cursor-pointer overflow-hidden rounded-xl bg-neutral-900 border border-transparent dark:border-[#333333]/80 shadow-md hover:shadow-xl transition-all duration-500 flex flex-col justify-end animate-card-fade-in ${aspectClass}`}
+      className={`block group relative cursor-pointer overflow-hidden rounded-xl bg-neutral-900 border border-transparent dark:border-[#333333]/80 shadow-md hover:shadow-xl transition-all duration-500 flex flex-col justify-end animate-card-fade-in no-underline text-inherit ${aspectClass}`}
     >
       {/* Фонове фото */}
       {article.coverImage ? (
@@ -250,7 +254,7 @@ function ArticleCard({ article, siteLang, aspectRatio, isHero = false, onSelect 
           </div>
         )}
       </div>
-    </article>
+    </a>
   );
 }
 
@@ -1302,18 +1306,21 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
 
             {/* Десктопний логотип (на лівій межі) */}
             <div className="hidden md:block overflow-hidden py-0.5 -my-0.5">
-              <button
-                type="button"
-                onClick={() => {
-                  handleSelectSection(null);
-                  setActiveSearchFilter(null);
+              <a
+                href="/"
+                onClick={(e) => {
+                  if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                    e.preventDefault();
+                    handleSelectSection(null);
+                    setActiveSearchFilter(null);
+                  }
                 }}
                 aria-label="The Impart — Головна сторінка"
-                className="animate-title-slide-down block text-xl sm:text-2xl font-medium tracking-tight text-black dark:text-[#ffffff] hover:opacity-75 transition-opacity select-none text-left cursor-pointer focus:outline-none"
+                className="animate-title-slide-down block text-xl sm:text-2xl font-medium tracking-tight text-black dark:text-[#ffffff] hover:opacity-75 transition-opacity select-none text-left cursor-pointer focus:outline-none no-underline"
                 style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
               >
                 The Impart
-              </button>
+              </a>
             </div>
           </div>
 
@@ -1323,19 +1330,22 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
           */}
           {/* Мобільний логотип по центру */}
           <div className="md:hidden absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
-            <button
-              type="button"
-              onClick={() => {
-                handleSelectSection(null);
-                setActiveSearchFilter(null);
-                setIsMobileMenuOpen(false);
+            <a
+              href="/"
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                  e.preventDefault();
+                  handleSelectSection(null);
+                  setActiveSearchFilter(null);
+                  setIsMobileMenuOpen(false);
+                }
               }}
               aria-label="The Impart — Головна сторінка"
-              className="block text-xl font-medium tracking-tight text-black dark:text-[#ffffff] hover:opacity-75 transition-opacity select-none text-center cursor-pointer focus:outline-none whitespace-nowrap"
+              className="block text-xl font-medium tracking-tight text-black dark:text-[#ffffff] hover:opacity-75 transition-opacity select-none text-center cursor-pointer focus:outline-none whitespace-nowrap no-underline"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
               The Impart
-            </button>
+            </a>
           </div>
 
           {/* Десктопний вибір рубрик (Новини / Статті / Огляди) по центру з жирнішим шрифтом */}
@@ -1346,11 +1356,16 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
             {NAV_SECTIONS.map((sec) => {
               const isActive = activeCategorySection === sec.id && !selectedArticleId && !activeSearchFilter;
               return (
-                <button
+                <a
                   key={sec.id}
-                  type="button"
-                  onClick={() => handleSelectSection(sec.id)}
-                  className={`group relative py-1 text-sm md:text-[15px] transition-colors duration-250 cursor-pointer focus:outline-none ${
+                  href={`/${sec.id}`}
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                      e.preventDefault();
+                      handleSelectSection(sec.id);
+                    }
+                  }}
+                  className={`group relative py-1 text-sm md:text-[15px] transition-colors duration-250 cursor-pointer focus:outline-none no-underline ${
                     isActive
                       ? 'text-black dark:text-[#ffffff] font-bold tracking-normal'
                       : 'text-neutral-800 dark:text-[#cbcbcb] hover:text-black dark:hover:text-[#ffffff] font-semibold tracking-normal'
@@ -1365,7 +1380,7 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
                       isActive ? 'w-full' : 'w-0 group-hover:w-full'
                     }`}
                   />
-                </button>
+                </a>
               );
             })}
           </nav>
@@ -1412,6 +1427,30 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
               onSelectTopic={handleSelectTopicFromArticle}
               onSelectCategory={handleSelectCategoryFromArticle}
             />
+          ) : selectedArticleId ? (
+            <div className="w-[92%] sm:w-[90%] md:max-w-3xl mx-auto py-16 sm:py-24 text-center">
+              {isLoading ? (
+                <div className="inline-block w-6 h-6 border-2 border-neutral-300 dark:border-neutral-700 border-t-black dark:border-t-white rounded-full animate-spin" />
+              ) : (
+                <div className="space-y-4">
+                  <p className="font-serif italic text-lg sm:text-xl text-neutral-500 dark:text-[#888888]">
+                    {siteLang === 'en' ? 'Article not found.' : 'Статтю не знайдено.'}
+                  </p>
+                  <a
+                    href="/"
+                    onClick={(e) => {
+                      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                        e.preventDefault();
+                        handleSelectArticle(null);
+                      }
+                    }}
+                    className="inline-block text-xs uppercase tracking-wider text-black dark:text-[#ffffff] underline underline-offset-4 cursor-pointer no-underline"
+                  >
+                    {siteLang === 'en' ? 'Return to all articles' : 'Повернутися до всіх статей'}
+                  </a>
+                </div>
+              )}
+            </div>
           ) : currentRoute === 'about' || currentRoute === 'contacts' ? (
             <StaticPageView
               page={staticPages[currentRoute]}
@@ -1507,13 +1546,18 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
                             ? 'Try searching with simpler or different keywords.'
                             : 'Спробуйте використати інші ключові слова або спростити запит.'}
                         </p>
-                        <button
-                          type="button"
-                          onClick={handleResetSearch}
-                          className="text-xs uppercase tracking-wider text-black dark:text-[#ffffff] underline underline-offset-4 cursor-pointer hover:opacity-75"
+                        <a
+                          href="/"
+                          onClick={(e) => {
+                            if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                              e.preventDefault();
+                              handleResetSearch();
+                            }
+                          }}
+                          className="text-xs uppercase tracking-wider text-black dark:text-[#ffffff] underline underline-offset-4 cursor-pointer hover:opacity-75 no-underline"
                         >
                           {siteLang === 'en' ? 'Return to all articles' : 'Повернутися до всіх статей'}
-                        </button>
+                        </a>
                       </div>
                     ) : (
                       <>
@@ -1585,52 +1629,74 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
                             aria-label="Нумерація сторінок результатів пошуку"
                             className="mt-12 sm:mt-16 pt-8 border-t border-neutral-100 dark:border-[#333333] flex items-center justify-center gap-2 sm:gap-3"
                           >
-                            <button
-                              type="button"
-                              onClick={() => handleSelectSearchPage(safeSearchPage - 1)}
-                              disabled={safeSearchPage <= 1}
+                            <a
+                              href={`/search/${encodeURIComponent(activeSearchFilter.query)}${safeSearchPage > 2 ? `?page=${safeSearchPage - 1}` : ''}`}
+                              onClick={(e) => {
+                                if (safeSearchPage <= 1) {
+                                  e.preventDefault();
+                                  return;
+                                }
+                                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                                  e.preventDefault();
+                                  handleSelectSearchPage(safeSearchPage - 1);
+                                }
+                              }}
                               aria-label="Попередня сторінка"
-                              className={`px-3 py-1.5 text-xs sm:text-sm tracking-wider transition-colors cursor-pointer focus:outline-none ${
+                              className={`px-3 py-1.5 text-xs sm:text-sm tracking-wider transition-colors cursor-pointer focus:outline-none no-underline ${
                                 safeSearchPage <= 1
-                                  ? 'text-neutral-300 dark:text-neutral-700 cursor-not-allowed'
+                                  ? 'text-neutral-300 dark:text-neutral-700 pointer-events-none'
                                   : 'text-neutral-600 dark:text-[#cbcbcb] hover:text-black dark:hover:text-white'
                               }`}
                             >
                               ←
-                            </button>
+                            </a>
 
                             {Array.from({ length: totalSearchPages }, (_, i) => i + 1).map((p) => {
                               const isCurrent = p === safeSearchPage;
+                              const href = `/search/${encodeURIComponent(activeSearchFilter.query)}${p > 1 ? `?page=${p}` : ''}`;
                               return (
-                                <button
+                                <a
                                   key={`search-page-${p}`}
-                                  type="button"
-                                  onClick={() => handleSelectSearchPage(p)}
+                                  href={href}
+                                  onClick={(e) => {
+                                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                                      e.preventDefault();
+                                      handleSelectSearchPage(p);
+                                    }
+                                  }}
                                   aria-current={isCurrent ? 'page' : undefined}
-                                  className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-xs sm:text-sm transition-all duration-200 cursor-pointer focus:outline-none ${
+                                  className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-xs sm:text-sm transition-all duration-200 cursor-pointer focus:outline-none no-underline ${
                                     isCurrent
                                       ? 'bg-black dark:bg-[#333333] text-white dark:text-[#ffffff] font-medium shadow-xs'
                                       : 'text-neutral-600 dark:text-[#cbcbcb] hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#252525]'
                                   }`}
                                 >
                                   {p}
-                                </button>
+                                </a>
                               );
                             })}
 
-                            <button
-                              type="button"
-                              onClick={() => handleSelectSearchPage(safeSearchPage + 1)}
-                              disabled={safeSearchPage >= totalSearchPages}
+                            <a
+                              href={`/search/${encodeURIComponent(activeSearchFilter.query)}?page=${safeSearchPage + 1}`}
+                              onClick={(e) => {
+                                if (safeSearchPage >= totalSearchPages) {
+                                  e.preventDefault();
+                                  return;
+                                }
+                                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                                  e.preventDefault();
+                                  handleSelectSearchPage(safeSearchPage + 1);
+                                }
+                              }}
                               aria-label="Наступна сторінка"
-                              className={`px-3 py-1.5 text-xs sm:text-sm tracking-wider transition-colors cursor-pointer focus:outline-none ${
+                              className={`px-3 py-1.5 text-xs sm:text-sm tracking-wider transition-colors cursor-pointer focus:outline-none no-underline ${
                                 safeSearchPage >= totalSearchPages
-                                  ? 'text-neutral-300 dark:text-neutral-700 cursor-not-allowed'
+                                  ? 'text-neutral-300 dark:text-neutral-700 pointer-events-none'
                                   : 'text-neutral-600 dark:text-[#cbcbcb] hover:text-black dark:hover:text-white'
                               }`}
                             >
                               →
-                            </button>
+                            </a>
                           </nav>
                         )}
                       </>
@@ -1703,13 +1769,18 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
                         </span>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleSelectSection(null)}
-                        className="text-xs text-neutral-500 dark:text-[#888888] hover:text-black dark:hover:text-[#ffffff] transition-colors cursor-pointer underline underline-offset-4"
+                      <a
+                        href="/"
+                        onClick={(e) => {
+                          if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                            e.preventDefault();
+                            handleSelectSection(null);
+                          }
+                        }}
+                        className="text-xs text-neutral-500 dark:text-[#888888] hover:text-black dark:hover:text-[#ffffff] transition-colors cursor-pointer underline underline-offset-4 no-underline"
                       >
                         {siteLang === 'en' ? 'All materials' : 'Всі матеріали'}
-                      </button>
+                      </a>
                     </div>
 
                     {isLoading ? (
@@ -1801,52 +1872,74 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
                             aria-label="Нумерація сторінок"
                             className="mt-12 sm:mt-16 pt-8 border-t border-neutral-100 dark:border-[#333333] flex items-center justify-center gap-2 sm:gap-3"
                           >
-                            <button
-                              type="button"
-                              onClick={() => handleSelectCategoryPage(safePage - 1)}
-                              disabled={safePage <= 1}
+                            <a
+                              href={`/${activeCategorySection}${safePage > 2 ? `?page=${safePage - 1}` : ''}`}
+                              onClick={(e) => {
+                                if (safePage <= 1) {
+                                  e.preventDefault();
+                                  return;
+                                }
+                                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                                  e.preventDefault();
+                                  handleSelectCategoryPage(safePage - 1);
+                                }
+                              }}
                               aria-label="Попередня сторінка"
-                              className={`px-3 py-1.5 text-xs sm:text-sm tracking-wider transition-colors cursor-pointer focus:outline-none ${
+                              className={`px-3 py-1.5 text-xs sm:text-sm tracking-wider transition-colors cursor-pointer focus:outline-none no-underline ${
                                 safePage <= 1
-                                  ? 'text-neutral-300 dark:text-neutral-700 cursor-not-allowed'
+                                  ? 'text-neutral-300 dark:text-neutral-700 pointer-events-none'
                                   : 'text-neutral-600 dark:text-[#cbcbcb] hover:text-black dark:hover:text-white'
                               }`}
                             >
                               ←
-                            </button>
+                            </a>
 
                             {Array.from({ length: totalCategoryPages }, (_, i) => i + 1).map((p) => {
                               const isCurrent = p === safePage;
+                              const href = `/${activeCategorySection}${p > 1 ? `?page=${p}` : ''}`;
                               return (
-                                <button
+                                <a
                                   key={`cat-page-${p}`}
-                                  type="button"
-                                  onClick={() => handleSelectCategoryPage(p)}
+                                  href={href}
+                                  onClick={(e) => {
+                                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                                      e.preventDefault();
+                                      handleSelectCategoryPage(p);
+                                    }
+                                  }}
                                   aria-current={isCurrent ? 'page' : undefined}
-                                  className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-xs sm:text-sm transition-all duration-200 cursor-pointer focus:outline-none ${
+                                  className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-xs sm:text-sm transition-all duration-200 cursor-pointer focus:outline-none no-underline ${
                                     isCurrent
                                       ? 'bg-black dark:bg-[#333333] text-white dark:text-[#ffffff] font-medium shadow-xs'
                                       : 'text-neutral-600 dark:text-[#cbcbcb] hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#252525]'
                                   }`}
                                 >
                                   {p}
-                                </button>
+                                </a>
                               );
                             })}
 
-                            <button
-                              type="button"
-                              onClick={() => handleSelectCategoryPage(safePage + 1)}
-                              disabled={safePage >= totalCategoryPages}
+                            <a
+                              href={`/${activeCategorySection}?page=${safePage + 1}`}
+                              onClick={(e) => {
+                                if (safePage >= totalCategoryPages) {
+                                  e.preventDefault();
+                                  return;
+                                }
+                                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                                  e.preventDefault();
+                                  handleSelectCategoryPage(safePage + 1);
+                                }
+                              }}
                               aria-label="Наступна сторінка"
-                              className={`px-3 py-1.5 text-xs sm:text-sm tracking-wider transition-colors cursor-pointer focus:outline-none ${
+                              className={`px-3 py-1.5 text-xs sm:text-sm tracking-wider transition-colors cursor-pointer focus:outline-none no-underline ${
                                 safePage >= totalCategoryPages
-                                  ? 'text-neutral-300 dark:text-neutral-700 cursor-not-allowed'
+                                  ? 'text-neutral-300 dark:text-neutral-700 pointer-events-none'
                                   : 'text-neutral-600 dark:text-[#cbcbcb] hover:text-black dark:hover:text-white'
                               }`}
                             >
                               →
-                            </button>
+                            </a>
                           </nav>
                         )}
                       </>
@@ -2083,21 +2176,31 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
 
             {/* Посилання на сторінки "Про проєкт" та "Контакти" */}
             <div className="mt-2.5 flex items-center gap-3 text-xs font-sans">
-              <button
-                type="button"
-                onClick={() => navigateToPage('about')}
+              <a
+                href="/about"
+                onClick={(e) => {
+                  if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                    e.preventDefault();
+                    navigateToPage('about');
+                  }
+                }}
                 className="text-neutral-500 dark:text-[#999999] hover:text-black dark:hover:text-[#ffffff] transition-colors cursor-pointer underline-offset-4 hover:underline"
               >
                 {siteLang === 'en' ? 'About Project' : 'Про проєкт'}
-              </button>
+              </a>
               <span className="text-neutral-300 dark:text-neutral-700">•</span>
-              <button
-                type="button"
-                onClick={() => navigateToPage('contacts')}
+              <a
+                href="/contacts"
+                onClick={(e) => {
+                  if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                    e.preventDefault();
+                    navigateToPage('contacts');
+                  }
+                }}
                 className="text-neutral-500 dark:text-[#999999] hover:text-black dark:hover:text-[#ffffff] transition-colors cursor-pointer underline-offset-4 hover:underline"
               >
                 {siteLang === 'en' ? 'Contacts' : 'Контакти'}
-              </button>
+              </a>
             </div>
 
             <div className="mt-3.5 flex items-center gap-4 text-neutral-400 dark:text-[#888888]">

@@ -27,39 +27,54 @@ export const StaticPageView: React.FC<StaticPageViewProps> = ({
     <article className="w-[92%] sm:w-[90%] md:max-w-3xl mx-auto py-8 sm:py-16 animate-article-fade-in">
       {/* Верхня навігація та швидкий перехід між сторінками */}
       <div className="flex items-center justify-between mb-8 sm:mb-12">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-500 dark:text-[#a0a0a0] hover:text-black dark:hover:text-white transition-colors cursor-pointer group focus:outline-none"
+        <a
+          href="/"
+          onClick={(e) => {
+            if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+              e.preventDefault();
+              onBack();
+            }
+          }}
+          className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-500 dark:text-[#a0a0a0] hover:text-black dark:hover:text-white transition-colors cursor-pointer group focus:outline-none no-underline"
         >
           <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
           <span>{isEn ? 'All articles' : 'Усі статті'}</span>
-        </button>
+        </a>
 
         <div className="flex items-center gap-3 text-xs font-sans">
-          <button
-            type="button"
-            onClick={() => onNavigateToPage?.('about')}
-            className={`transition-colors cursor-pointer ${
+          <a
+            href="/about"
+            onClick={(e) => {
+              if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                e.preventDefault();
+                onNavigateToPage?.('about');
+              }
+            }}
+            className={`transition-colors cursor-pointer no-underline ${
               page.id === 'about'
                 ? 'font-medium text-black dark:text-white underline underline-offset-4'
                 : 'text-neutral-400 dark:text-[#777777] hover:text-black dark:hover:text-white'
             }`}
           >
             {isEn ? 'About Project' : 'Про проєкт'}
-          </button>
+          </a>
           <span className="text-neutral-300 dark:text-neutral-700">•</span>
-          <button
-            type="button"
-            onClick={() => onNavigateToPage?.('contacts')}
-            className={`transition-colors cursor-pointer ${
+          <a
+            href="/contacts"
+            onClick={(e) => {
+              if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                e.preventDefault();
+                onNavigateToPage?.('contacts');
+              }
+            }}
+            className={`transition-colors cursor-pointer no-underline ${
               page.id === 'contacts'
                 ? 'font-medium text-black dark:text-white underline underline-offset-4'
                 : 'text-neutral-400 dark:text-[#777777] hover:text-black dark:hover:text-white'
             }`}
           >
             {isEn ? 'Contacts' : 'Контакти'}
-          </button>
+          </a>
         </div>
       </div>
 
@@ -78,14 +93,19 @@ export const StaticPageView: React.FC<StaticPageViewProps> = ({
 
       {/* Кнопка повернення внизу сторінки */}
       <div className="mt-16 pt-8 border-t border-neutral-100 dark:border-[#333333] flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-black dark:text-[#ffffff] hover:opacity-60 transition-opacity cursor-pointer font-medium"
+        <a
+          href="/"
+          onClick={(e) => {
+            if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+              e.preventDefault();
+              onBack();
+            }
+          }}
+          className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-black dark:text-[#ffffff] hover:opacity-60 transition-opacity cursor-pointer font-medium no-underline"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>{isEn ? 'Back to all articles' : 'Повернутися до статей'}</span>
-        </button>
+        </a>
 
         <span className="text-xs text-neutral-400 dark:text-[#777777] font-sans">
           {isEn ? 'The Impart Knowledge Space' : 'Простір знань The Impart'}

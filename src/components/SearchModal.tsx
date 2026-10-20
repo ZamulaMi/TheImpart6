@@ -56,23 +56,23 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     if (isOpen) {
       setRendered(true);
       setQuery('');
-      document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
       const timer = requestAnimationFrame(() => {
         setIsAnimateIn(true);
       });
       const focusTimer = setTimeout(() => {
-        inputRef.current?.focus();
+        const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+        if (!isTouch) {
+          inputRef.current?.focus({ preventScroll: true });
+        }
       }, 150);
       return () => {
         cancelAnimationFrame(timer);
         clearTimeout(focusTimer);
-        document.documentElement.style.overflow = '';
         document.body.style.overflow = '';
       };
     } else {
       setIsAnimateIn(false);
-      document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
       const timer = setTimeout(() => {
         setRendered(false);
@@ -157,7 +157,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       <header
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
-        className="w-full bg-white/20 dark:bg-[#111111]/40 backdrop-blur-md py-3.5 sm:py-4 border-none cursor-default"
+        className="w-full bg-transparent py-3.5 sm:py-4 border-none cursor-default"
       >
         <div className="relative w-[92%] sm:w-[90%] md:w-[calc(26/34*100%)] mx-auto flex items-center justify-between min-h-[38px]">
           {/* Ліва сторона:
@@ -178,15 +178,20 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
           {/* Мобільний логотип по центру — точне співпадіння позиції з основною шапкою сайту */}
           <div className="md:hidden absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
-            <button
-              type="button"
-              onClick={() => onClose()}
+            <a
+              href="/"
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                  e.preventDefault();
+                  onClose();
+                }
+              }}
               aria-label="The Impart — Головна сторінка"
-              className="block text-xl font-medium tracking-tight text-black dark:text-[#ffffff] hover:opacity-75 transition-opacity select-none text-center cursor-pointer focus:outline-none whitespace-nowrap"
+              className="block text-xl font-medium tracking-tight text-black dark:text-[#ffffff] hover:opacity-75 transition-opacity select-none text-center cursor-pointer focus:outline-none whitespace-nowrap no-underline"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
               The Impart
-            </button>
+            </a>
           </div>
 
           {/* Кнопка-хрестик: закриває вікно пошуку, розміщена прямо над іконкою пошуку в шапці */}
@@ -288,14 +293,19 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 </div>
 
                 {matchingArticles.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleOpenAll}
-                    className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-white hover:bg-neutral-800 bg-black dark:bg-[#333333] dark:hover:bg-[#444444] active:scale-95 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer group shadow-2xs"
+                  <a
+                    href={`/search/${encodeURIComponent(cleanQuery)}`}
+                    onClick={(e) => {
+                      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                        e.preventDefault();
+                        handleOpenAll();
+                      }
+                    }}
+                    className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-white hover:bg-neutral-800 bg-black dark:bg-[#333333] dark:hover:bg-[#444444] active:scale-95 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer group shadow-2xs no-underline"
                   >
                     <span>{isEn ? 'Open all found articles' : 'Відкрити всі знайдені статті'}</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  </a>
                 )}
               </div>
 
@@ -309,10 +319,16 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     const timeAgo = formatTimeAgoOrDate(article.createdAt, article.date, article.id, lang);
 
                     return (
-                      <div
+                      <a
                         key={article.id}
-                        onClick={() => handleItemClick(article.id)}
-                        className="group cursor-pointer p-4 sm:p-4.5 rounded-xl border border-neutral-200/80 dark:border-[#2e2e2e]/80 bg-white/70 dark:bg-[#191919]/70 backdrop-blur-xs hover:border-black/50 dark:hover:border-[#555555] hover:bg-neutral-50/90 dark:hover:bg-[#202020]/90 transition-all duration-200 flex items-center justify-between gap-4 shadow-2xs hover:shadow-xs"
+                        href={`/article/${encodeURIComponent(article.id)}`}
+                        onClick={(e) => {
+                          if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                            e.preventDefault();
+                            handleItemClick(article.id);
+                          }
+                        }}
+                        className="group cursor-pointer p-4 sm:p-4.5 rounded-xl border border-neutral-200/80 dark:border-[#2e2e2e]/80 bg-white/70 dark:bg-[#191919]/70 backdrop-blur-xs hover:border-black/50 dark:hover:border-[#555555] hover:bg-neutral-50/90 dark:hover:bg-[#202020]/90 transition-all duration-200 flex items-center justify-between gap-4 shadow-2xs hover:shadow-xs no-underline text-inherit"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider mb-1">
@@ -344,7 +360,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                             />
                           </div>
                         )}
-                      </div>
+                      </a>
                     );
                   })}
                 </div>

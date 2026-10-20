@@ -104,9 +104,11 @@ export const RubricsModal: React.FC<RubricsModalProps> = ({
             <a
               href="/"
               onClick={(e) => {
-                e.preventDefault();
-                onSelectSection(null);
-                onClose();
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                  e.preventDefault();
+                  onSelectSection(null);
+                  onClose();
+                }
               }}
               aria-label="The Impart — Головна сторінка"
               className="block text-xl font-medium tracking-tight text-black dark:text-[#ffffff] hover:opacity-75 transition-opacity select-none text-center cursor-pointer focus:outline-none whitespace-nowrap"
@@ -146,9 +148,11 @@ export const RubricsModal: React.FC<RubricsModalProps> = ({
                 key={`modal_rubric_${sec.id}`}
                 href={`/${sec.id}`}
                 onClick={(e) => {
-                  e.preventDefault();
-                  onSelectSection(sec.id);
-                  onClose();
+                  if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                    e.preventDefault();
+                    onSelectSection(sec.id);
+                    onClose();
+                  }
                 }}
                 className={`group relative text-2xl sm:text-3xl md:text-4xl transition-all duration-200 cursor-pointer focus:outline-none py-2 px-4 select-none text-center ${
                   isActive
@@ -179,27 +183,33 @@ export const RubricsModal: React.FC<RubricsModalProps> = ({
         >
           {/* Посилання на постійні сторінки */}
           <div className="flex items-center gap-3 text-xs font-sans text-neutral-500 dark:text-[#888888]">
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onNavigateToPage?.('about');
+            <a
+              href="/about"
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                  e.preventDefault();
+                  onClose();
+                  onNavigateToPage?.('about');
+                }
               }}
-              className="hover:text-black dark:hover:text-[#ffffff] transition-colors cursor-pointer py-1"
+              className="hover:text-black dark:hover:text-[#ffffff] transition-colors cursor-pointer py-1 no-underline"
             >
               {siteLang === 'en' ? 'About Project' : 'Про проєкт'}
-            </button>
+            </a>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onNavigateToPage?.('contacts');
+            <a
+              href="/contacts"
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                  e.preventDefault();
+                  onClose();
+                  onNavigateToPage?.('contacts');
+                }
               }}
-              className="hover:text-black dark:hover:text-[#ffffff] transition-colors cursor-pointer py-1"
+              className="hover:text-black dark:hover:text-[#ffffff] transition-colors cursor-pointer py-1 no-underline"
             >
               {siteLang === 'en' ? 'Contacts' : 'Контакти'}
-            </button>
+            </a>
           </div>
 
           <div className="flex items-center gap-1.5 p-1 bg-neutral-100/90 dark:bg-[#1a1a1a] rounded-full border border-neutral-200/50 dark:border-[#2a2a2a]">
