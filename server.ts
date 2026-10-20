@@ -220,6 +220,34 @@ app.all(['/api/taxonomies', '/api/taxonomies/*'], async (req, res) => {
   }
 });
 
+// Ендпоінт визначення країни відвідувача (геолокація)
+const POST_SOVIET_COUNTRIES = new Set([
+  'UA', 'KZ', 'UZ', 'GE', 'AZ', 'AM', 'MD', 'KG', 'TJ', 'TM', 'BY', 'LT', 'LV', 'EE', 'RU'
+]);
+
+app.get('/api/geo', (req, res) => {
+  try {
+    const rawCountry =
+      req.headers['x-client-geo-country'] ||
+      req.headers['cf-ipcountry'] ||
+      req.headers['x-appengine-country'] ||
+      req.headers['cloudfront-viewer-country'] ||
+      req.headers['x-country-code'] ||
+      req.headers['x-geo-country'];
+
+    const country = typeof rawCountry === 'string' ? rawCountry.trim().toUpperCase() : null;
+    const isPostSoviet = country ? POST_SOVIET_COUNTRIES.has(country) : null;
+
+    res.setHeader('Cache-Control', 'private, no-cache');
+    return res.status(200).json({
+      country,
+      isPostSoviet,
+    });
+  } catch {
+    return res.status(200).json({ country: null, isPostSoviet: null });
+  }
+});
+
 // Обробка помилок парсингу JSON
 app.use((err: any, _req: any, res: any, next: any) => {
   if (err) {

@@ -27,6 +27,7 @@ import { RubricsModal } from './components/RubricsModal';
 import { formatTimeAgoOrDate } from './utils/date';
 import { getStoredTaxonomies, saveStoredTaxonomies } from './utils/taxonomies';
 import { searchArticlesWithFuzzy } from './utils/search';
+import { getInitialSiteLanguage, refineInitialLanguageViaGeo } from './utils/langDetector';
 import {
   getAuthToken,
   getAuthHeaders,
@@ -402,13 +403,14 @@ export default function App() {
     }
   }, [isAdminAuthenticated]);
 
-  const [siteLang, setSiteLang] = useState<SiteLanguage>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(LANG_STORAGE_KEY);
-      if (saved === 'en' || saved === 'ua') return saved;
-    }
-    return 'ua';
-  });
+  const [siteLang, setSiteLang] = useState<SiteLanguage>(() => getInitialSiteLanguage());
+
+  // Автоматичне визначення та уточнення мови при першому відкритті
+  useEffect(() => {
+    refineInitialLanguageViaGeo(siteLang, (resolvedLang) => {
+      setSiteLang(resolvedLang);
+    });
+  }, []);
 
   // Темна тема є основною за замовчуванням (HEX #111 для header/footer, #222 для body, #cbcbcb для тексту).
   // Якщо користувач змінює тему, браузер локально запам'ятовує вибір у localStorage.
