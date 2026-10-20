@@ -77,7 +77,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
         </div>
       </div>
 
-      {/* Рубрики, теми та час публікації */}
+      {/* Рубрики та час публікації */}
       <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wider text-neutral-500 dark:text-[#888888] mb-4">
         {categoriesList.map((cat, idx) => (
           <button
@@ -90,18 +90,6 @@ export const ArticleView: React.FC<ArticleViewProps> = ({
             {cat}
           </button>
         ))}
-        {topics &&
-          topics.map((t, idx) => (
-            <button
-              key={`top_${idx}`}
-              type="button"
-              onClick={() => onSelectTopic?.(t)}
-              className="text-neutral-500 dark:text-[#9e9e9e] hover:text-black dark:hover:text-white bg-neutral-50 dark:bg-[#181818] hover:bg-neutral-100 dark:hover:bg-[#222222] border border-neutral-200/60 dark:border-[#2e2e2e] px-2 py-0.5 rounded text-[11px] transition-colors cursor-pointer"
-              title={isEn ? `Search articles on #${t}` : `Шукати матеріали з темою #${t}`}
-            >
-              #{t}
-            </button>
-          ))}
         {timeDisplay && (
           <>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
