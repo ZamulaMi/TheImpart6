@@ -159,14 +159,34 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         onClick={(e) => e.stopPropagation()}
         className="w-full bg-white/20 dark:bg-[#111111]/40 backdrop-blur-md py-3.5 sm:py-4 border-none cursor-default"
       >
-        <div className="w-[92%] sm:w-[90%] md:w-[calc(26/34*100%)] mx-auto flex items-center justify-between min-h-[38px]">
-          <div className="overflow-hidden py-0.5 -my-0.5">
-            <span
-              className="block text-xl sm:text-2xl font-medium tracking-tight text-neutral-400 dark:text-[#666666] select-none cursor-default"
+        <div className="relative w-[92%] sm:w-[90%] md:w-[calc(26/34*100%)] mx-auto flex items-center justify-between min-h-[38px]">
+          {/* Ліва сторона:
+              - На мобільних (< md): порожній контейнер для збереження відступів
+              - На десктопі (>= md): логотип The Impart
+          */}
+          <div className="flex items-center z-20">
+            <div className="md:hidden w-10 h-10 -ml-2" />
+            <div className="hidden md:block overflow-hidden py-0.5 -my-0.5">
+              <span
+                className="block text-xl sm:text-2xl font-medium tracking-tight text-black dark:text-[#ffffff] select-none cursor-default text-left"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                The Impart
+              </span>
+            </div>
+          </div>
+
+          {/* Мобільний логотип по центру — точне співпадіння позиції з основною шапкою сайту */}
+          <div className="md:hidden absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => onClose()}
+              aria-label="The Impart — Головна сторінка"
+              className="block text-xl font-medium tracking-tight text-black dark:text-[#ffffff] hover:opacity-75 transition-opacity select-none text-center cursor-pointer focus:outline-none whitespace-nowrap"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
               The Impart
-            </span>
+            </button>
           </div>
 
           {/* Кнопка-хрестик: закриває вікно пошуку, розміщена прямо над іконкою пошуку в шапці */}
