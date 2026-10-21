@@ -29,6 +29,7 @@ export interface Article {
   date: string;
   readTime?: string;
   createdAt?: string;
+  updatedAt?: string; // Дата останнього редагування (відображається виключно в адмін-панелі)
   published: boolean; // Опубліковано для української версії сайту
 
   // Англійська версія

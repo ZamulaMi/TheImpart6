@@ -108,3 +108,40 @@ function getPluralUkrainian(n: number, one: string, few: string, many: string): 
   }
   return many;
 }
+
+/**
+ * Отримує надійний таймстемп дати первинного створення статті для стабільного хронологічного сортування.
+ * Пріоритет:
+ * 1. a.createdAt (ISO рядок з точним часом створення)
+ * 2. timestamp з числового id (якщо id згенеровано через Date.now())
+ * 3. розпарсена дата з a.date
+ */
+export function getArticleCreationTimestamp(a: { createdAt?: string; id?: string; date?: string }): number {
+  if (a.createdAt) {
+    const t = new Date(a.createdAt).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (a.id && /^\d{12,14}$/.test(String(a.id))) {
+    const t = parseInt(String(a.id), 10);
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (a.date) {
+    const t = new Date(a.date).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  return 0;
+}
+
+/**
+ * Сортує масив статей строго хронологічно за первинною датою створення (найновіші спочатку).
+ * Завдяки цьому редагування будь-яких полів статті НІКОЛИ не призводить до зсуву статті в хронології.
+ */
+export function sortArticlesChronologically<T extends { createdAt?: string; id: string; date?: string }>(articles: T[]): T[] {
+  return [...articles].sort((a, b) => {
+    const timeA = getArticleCreationTimestamp(a);
+    const timeB = getArticleCreationTimestamp(b);
+    if (timeB !== timeA) return timeB - timeA;
+    return String(b.id).localeCompare(String(a.id));
+  });
+}
+

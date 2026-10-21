@@ -21,6 +21,7 @@ export interface Article {
   date: string;
   readTime?: string;
   createdAt?: string;
+  updatedAt?: string;
   published: boolean;
 
   // Англійська версія
@@ -131,6 +132,7 @@ export async function initDb() {
       await sql`ALTER TABLE articles ADD COLUMN IF NOT EXISTS categories_en TEXT;`;
       await sql`ALTER TABLE articles ADD COLUMN IF NOT EXISTS topics TEXT;`;
       await sql`ALTER TABLE articles ADD COLUMN IF NOT EXISTS topics_en TEXT;`;
+      await sql`ALTER TABLE articles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;`;
 
       const rows = await sql`SELECT count(*) as count FROM articles;`;
       if (parseInt(rows[0]?.count || '0', 10) === 0) {
@@ -196,6 +198,7 @@ export async function getArticles(): Promise<Article[]> {
           date, 
           read_time as "readTime", 
           created_at as "createdAt",
+          updated_at as "updatedAt",
           published,
           title_en as "titleEn",
           excerpt_en as "excerptEn",
@@ -225,6 +228,7 @@ export async function getArticles(): Promise<Article[]> {
         date: String(r.date || ''),
         readTime: r.readTime ? String(r.readTime) : undefined,
         createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : undefined,
+        updatedAt: r.updatedAt ? new Date(r.updatedAt).toISOString() : undefined,
         published: r.published === true || String(r.published) === 'true' || r.published === 1,
         titleEn: r.titleEn ? String(r.titleEn) : undefined,
         excerptEn: r.excerptEn ? String(r.excerptEn) : undefined,
@@ -243,10 +247,17 @@ export async function getArticles(): Promise<Article[]> {
         for (const local of localArticles) {
           const idx = inMemoryArticles.findIndex((m) => m.id === local.id);
           if (idx === -1) {
-            inMemoryArticles.unshift(local);
+            inMemoryArticles.push(local);
           }
         }
       }
+
+      // Сортуємо строго хронологічно за датою первинного створення
+      inMemoryArticles.sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.date || 0).getTime();
+        const timeB = new Date(b.createdAt || b.date || 0).getTime();
+        return timeB - timeA;
+      });
 
       writeArticlesToFile(inMemoryArticles);
       return inMemoryArticles;
@@ -269,15 +280,26 @@ export async function saveArticle(article: Article): Promise<Article> {
   const isPubEn = article.publishedEn === true || String(article.publishedEn) === 'true' || (article.publishedEn as any) === 1;
 
   const id = String(article.id || Date.now().toString());
+
+  // 1. Знаходимо, чи існує вже стаття у пам'яті
+  const existingIdx = inMemoryArticles.findIndex((a) => a.id === id);
+  const existing = existingIdx >= 0 ? inMemoryArticles[existingIdx] : undefined;
+  const isUpdate = Boolean(existing);
+
   const title = String(article.title || '').trim();
   const excerpt = String(article.excerpt || '').trim();
   const content = String(article.content || '').trim();
   const category = String(article.category || 'Загальне').trim();
   const author = String(article.author || 'Редакція The Impart').trim();
   const coverImage = article.coverImage ? String(article.coverImage).trim() : undefined;
-  const date = String(article.date || new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' }));
+
+  // КРИТИЧНО: Первинна дата створення (createdAt) та відображувана дата публікації (date)
+  // фіксуються при першому створенні і НІКОЛИ не змінюються при будь-якому редагуванні статті!
+  const createdAt = existing?.createdAt || article.createdAt || new Date().toISOString();
+  const date = existing?.date || article.date || new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+  // Дата редагування фіксується окремо і доступна тільки в адмін-панелі
+  const updatedAt = isUpdate ? (article.updatedAt || new Date().toISOString()) : article.updatedAt;
   const readTime = article.readTime ? String(article.readTime) : undefined;
-  const createdAt = article.createdAt || new Date().toISOString();
 
   const titleEn = article.titleEn ? String(article.titleEn).trim() : undefined;
   const excerptEn = article.excerptEn ? String(article.excerptEn).trim() : undefined;
@@ -310,6 +332,7 @@ export async function saveArticle(article: Article): Promise<Article> {
     date,
     readTime,
     createdAt,
+    updatedAt,
     published: isPub,
     titleEn,
     excerptEn,
@@ -320,18 +343,24 @@ export async function saveArticle(article: Article): Promise<Article> {
     publishedEn: isPubEn,
   };
 
-  // 1. Миттєво оновлюємо пам'ять
-  const existingIdx = inMemoryArticles.findIndex((a) => a.id === id);
+  // 1. Оновлюємо пам'ять
   if (existingIdx >= 0) {
     inMemoryArticles[existingIdx] = fullArticle;
   } else {
     inMemoryArticles = [fullArticle, ...inMemoryArticles];
   }
 
-  // 2. Миттєво записуємо у файл
+  // 2. Сортуємо пам'ять строго за первинною датою створення, щоб редагування не зміщувало статтю у стрічці
+  inMemoryArticles.sort((a, b) => {
+    const timeA = new Date(a.createdAt || a.date || 0).getTime();
+    const timeB = new Date(b.createdAt || b.date || 0).getTime();
+    return timeB - timeA;
+  });
+
+  // 3. Миттєво записуємо у файл
   writeArticlesToFile(inMemoryArticles);
 
-  // 3. Синхронізуємо з Neon PostgreSQL з безпечним тайм-аутом
+  // 4. Синхронізуємо з Neon PostgreSQL з безпечним тайм-аутом
   try {
     await initDb();
     const categoriesJson = JSON.stringify(categories);
@@ -344,7 +373,8 @@ export async function saveArticle(article: Article): Promise<Article> {
         INSERT INTO articles (
           id, title, excerpt, content, category, author, cover_image, date, read_time, published,
           title_en, excerpt_en, content_en, category_en, published_en,
-          categories, categories_en, topics, topics_en
+          categories, categories_en, topics, topics_en,
+          created_at, updated_at
         )
         VALUES (
           ${id}, 
@@ -365,7 +395,9 @@ export async function saveArticle(article: Article): Promise<Article> {
           ${categoriesJson},
           ${categoriesEnJson},
           ${topicsJson},
-          ${topicsEnJson}
+          ${topicsEnJson},
+          ${createdAt ? new Date(createdAt) : new Date()},
+          ${updatedAt ? new Date(updatedAt) : null}
         )
         ON CONFLICT (id) DO UPDATE SET
           title = EXCLUDED.title,
@@ -374,7 +406,6 @@ export async function saveArticle(article: Article): Promise<Article> {
           category = EXCLUDED.category,
           author = EXCLUDED.author,
           cover_image = EXCLUDED.cover_image,
-          date = EXCLUDED.date,
           read_time = EXCLUDED.read_time,
           published = EXCLUDED.published,
           title_en = EXCLUDED.title_en,
@@ -385,7 +416,8 @@ export async function saveArticle(article: Article): Promise<Article> {
           categories = EXCLUDED.categories,
           categories_en = EXCLUDED.categories_en,
           topics = EXCLUDED.topics,
-          topics_en = EXCLUDED.topics_en;
+          topics_en = EXCLUDED.topics_en,
+          updated_at = EXCLUDED.updated_at;
       `;
     }, 8000);
   } catch (error: any) {
@@ -471,6 +503,7 @@ export default async function handler(req: any, res: any) {
         date: body.date ? String(body.date) : new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' }),
         readTime: body.readTime ? String(body.readTime) : undefined,
         createdAt: body.createdAt ? String(body.createdAt) : undefined,
+        updatedAt: body.updatedAt ? String(body.updatedAt) : undefined,
         published: body.published !== false && String(body.published) !== 'false',
         // Англійські поля
         titleEn: body.titleEn ? String(body.titleEn).trim() : undefined,

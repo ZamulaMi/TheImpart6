@@ -24,7 +24,7 @@ import { ArticleView } from './components/ArticleView';
 import { StaticPageView } from './components/StaticPageView';
 import { SearchModal } from './components/SearchModal';
 import { RubricsModal } from './components/RubricsModal';
-import { formatTimeAgoOrDate } from './utils/date';
+import { formatTimeAgoOrDate, sortArticlesChronologically } from './utils/date';
 import { getStoredTaxonomies, saveStoredTaxonomies } from './utils/taxonomies';
 import { searchArticlesWithFuzzy } from './utils/search';
 import { getInitialSiteLanguage, refineInitialLanguageViaGeo } from './utils/langDetector';
@@ -589,11 +589,11 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return sortArticlesChronologically(parsed);
         }
       }
     } catch {}
-    return SEED_ARTICLES;
+    return sortArticlesChronologically(SEED_ARTICLES);
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -766,16 +766,17 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
             for (const local of prev) {
               const idx = merged.findIndex((m) => m.id === local.id);
               if (idx === -1) {
-                merged.unshift(local);
+                merged.push(local);
               }
             }
           }
+          const sorted = sortArticlesChronologically(merged);
           try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted));
           } catch (e) {
             console.error(e);
           }
-          return merged;
+          return sorted;
         });
         loaded = true;
         setIsLoading(false);
@@ -801,16 +802,17 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
               for (const local of prev) {
                 const idx = merged.findIndex((m) => m.id === local.id);
                 if (idx === -1) {
-                  merged.unshift(local);
+                  merged.push(local);
                 }
               }
             }
+            const sorted = sortArticlesChronologically(merged);
             try {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted));
             } catch (e) {
               console.error(e);
             }
-            return merged;
+            return sorted;
           });
           loaded = true;
         }
@@ -827,7 +829,8 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
           const parsed = JSON.parse(cached);
           const sanitized = sanitizeArticleList(parsed);
           if (sanitized.length > 0) {
-            setArticles(sanitized);
+            const sorted = sortArticlesChronologically(sanitized);
+            setArticles(sorted);
             loaded = true;
           }
         }
@@ -837,7 +840,7 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
     }
 
     if (!loaded) {
-      setArticles((prev) => (prev && prev.length > 0 ? prev : SEED_ARTICLES));
+      setArticles((prev) => (prev && prev.length > 0 ? sortArticlesChronologically(prev) : sortArticlesChronologically(SEED_ARTICLES)));
     }
 
     setIsLoading(false);
@@ -1073,12 +1076,13 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
       const updated = exists
         ? prev.map((a) => (a.id === article.id ? article : a))
         : [article, ...prev];
+      const sorted = sortArticlesChronologically(updated);
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted));
       } catch (e) {
         console.error(e);
       }
-      return updated;
+      return sorted;
     });
 
     // 2. Зберігаємо у базу даних (Neon + сервер)
@@ -1089,10 +1093,11 @@ const sanitizeStaticPages = (data: SitePagesData): SitePagesData => ({
         const updated = exists
           ? prev.map((a) => (a.id === savedArticle.id ? savedArticle : a))
           : [savedArticle, ...prev];
+        const sorted = sortArticlesChronologically(updated);
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted));
         } catch (e) {}
-        return updated;
+        return sorted;
       });
     }
   };

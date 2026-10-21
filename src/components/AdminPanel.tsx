@@ -419,6 +419,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       finalTopicsEn.push(pendingTopicEn);
     }
 
+    const existing = !isCreatingNew ? articles.find((a) => a.id === editingArticle.id) : undefined;
+    const isEditingExisting = Boolean(existing || (!isCreatingNew && editingArticle.id));
+
+    // КРИТИЧНО: Первинна дата створення (createdAt) та дата публікації (date) фіксуються НАЗАВЖДИ!
+    // При будь-якому редагуванні (обкладинка, текст, заголовок тощо) дата публікації для користувачів сайту НЕ ЗМІНЮЄТЬСЯ.
+    const originalCreatedAt = existing?.createdAt || editingArticle.createdAt || new Date().toISOString();
+    const originalDate = existing?.date || editingArticle.date || new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+    const updatedAt = isEditingExisting ? new Date().toISOString() : undefined;
+
     const finalArticle: Article = {
       id: editingArticle.id || Date.now().toString(),
       // Українська версія
@@ -440,8 +449,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       // Загальні метадані
       author: editingArticle.author?.trim() || 'Редакція The Impart',
       coverImage: editingArticle.coverImage?.trim() || undefined,
-      date: editingArticle.date || new Date().toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' }),
-      createdAt: editingArticle.createdAt || new Date().toISOString(),
+      date: originalDate,
+      createdAt: originalCreatedAt,
+      updatedAt: updatedAt,
       // Англійська версія
       titleEn: editingArticle.titleEn?.trim() || undefined,
       excerptEn: editingArticle.excerptEn?.trim() || undefined,
@@ -1166,6 +1176,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <p className="text-xs text-neutral-500 mt-1">
                   Основна назва статті в списку завжди українською, переклад створюється на вкладці «English».
                 </p>
+                {!isCreatingNew && editingArticle && (
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500 mt-2">
+                    <span className="inline-flex items-center gap-1 bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded font-sans">
+                      Дата створення: <strong className="font-medium text-black">{editingArticle.date || (editingArticle.createdAt ? new Date(editingArticle.createdAt).toLocaleDateString('uk-UA') : '—')}</strong> (зафіксована)
+                    </span>
+                    {editingArticle.updatedAt && (
+                      <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200/60 px-2 py-0.5 rounded font-sans">
+                        Останнє редагування: <strong className="font-medium">{new Date(editingArticle.updatedAt).toLocaleString('uk-UA')}</strong>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
               <button
                 type="button"
@@ -2492,7 +2514,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             {timeDisplay && (
                               <>
                                 <span className="text-neutral-300">•</span>
-                                <span className="text-xs text-neutral-400">{timeDisplay}</span>
+                                <span className="text-xs text-neutral-400" title={`Створено: ${art.date || art.createdAt}`}>
+                                  {timeDisplay}
+                                </span>
+                              </>
+                            )}
+                            {art.updatedAt && (
+                              <>
+                                <span className="text-neutral-300">•</span>
+                                <span
+                                  className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60"
+                                  title={`Останнє редагування: ${new Date(art.updatedAt).toLocaleString('uk-UA')}`}
+                                >
+                                  Редаговано: {new Date(art.updatedAt).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
                               </>
                             )}
                           </div>
